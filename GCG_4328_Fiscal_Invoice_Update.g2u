@@ -1,0 +1,449 @@
+Program.Sub.ScreenSU.Start
+Gui.Fiscal..Create
+Gui.Fiscal..Caption("Fiscal Invoice Update")
+Gui.Fiscal..Size(20595,12015)
+Gui.Fiscal..MinX(0)
+Gui.Fiscal..MinY(0)
+Gui.Fiscal..Position(0,0)
+Gui.Fiscal..BackColor(-2147483633)
+Gui.Fiscal..MousePointer(0)
+Gui.Fiscal..Event(UnLoad,Fiscal_UnLoad)
+Gui.Fiscal.cmdSave.Create(Button)
+Gui.Fiscal.cmdSave.Size(855,375)
+Gui.Fiscal.cmdSave.Position(135,11160)
+Gui.Fiscal.cmdSave.Caption("Save")
+Gui.Fiscal.cmdSave.Event(Click,cmdSave_Click)
+Gui.Fiscal.gsFiscal.Create(GsGridControl)
+Gui.Fiscal.gsFiscal.Size(20100,7440)
+Gui.Fiscal.gsFiscal.Position(135,3525)
+Gui.Fiscal.gsFiscal.Event(CellValueChanged,gsFiscal_CellValueChanged)
+Gui.Fiscal.frRangeSelection.Create(Frame)
+Gui.Fiscal.frRangeSelection.Size(4500,1815)
+Gui.Fiscal.frRangeSelection.Position(135,915)
+Gui.Fiscal.frRangeSelection.Caption("Date Range Selection")
+Gui.Fiscal.dtpBeg.Create(DatePicker)
+Gui.Fiscal.dtpBeg.Size(2085,285)
+Gui.Fiscal.dtpBeg.Position(150,570)
+Gui.Fiscal.dtpBeg.Parent("frRangeSelection")
+Gui.Fiscal.dtpEnd.Create(DatePicker)
+Gui.Fiscal.dtpEnd.Size(2040,285)
+Gui.Fiscal.dtpEnd.Position(2355,570)
+Gui.Fiscal.dtpEnd.Parent("frRangeSelection")
+Gui.Fiscal.lblBeg.Create(Label,"Beginning Order Date",True,1950,255,0,135,330,True,0,"Arial",8,-2147483633,0)
+Gui.Fiscal.lblBeg.Parent("frRangeSelection")
+Gui.Fiscal.lblEnd.Create(Label,"Ending Order Date",True,1920,255,0,2355,330,True,0,"Arial",8,-2147483633,0)
+Gui.Fiscal.lblEnd.Parent("frRangeSelection")
+Gui.Fiscal.lblEnd.ForeColor(0)
+Gui.Fiscal.ddlFiscalFilter.Create(DropDownList)
+Gui.Fiscal.ddlFiscalFilter.Size(2085,330)
+Gui.Fiscal.ddlFiscalFilter.Position(150,1245)
+Gui.Fiscal.ddlFiscalFilter.Parent("frRangeSelection")
+Gui.Fiscal.lblFiscalFilter.Create(Label,"Fiscal Filter",True,1935,255,0,135,1005,True,0,"Arial",8,-2147483633,0)
+Gui.Fiscal.lblFiscalFilter.Parent("frRangeSelection")
+Gui.Fiscal.lblFiscalFilter.ForeColor(0)
+Gui.Fiscal.frTextSelection.Create(Frame)
+Gui.Fiscal.frTextSelection.Size(4500,1815)
+Gui.Fiscal.frTextSelection.Position(4770,915)
+Gui.Fiscal.frTextSelection.Caption("Text Selection")
+Gui.Fiscal.lblTextFilter.Create(Label,"Text Filter",True,1935,255,0,135,330,True,0,"Arial",8,-2147483633,0)
+Gui.Fiscal.lblTextFilter.Parent("frTextSelection")
+Gui.Fiscal.txtFilterText.Create(TextBox,"",True,4155,300,0,150,1245,True,0,"Arial",8,-2147483643,1)
+Gui.Fiscal.txtFilterText.Parent("frTextSelection")
+Gui.Fiscal.txtFilterText.MaxLength(30)
+Gui.Fiscal.ddlFilter.Create(DropDownList)
+Gui.Fiscal.ddlFilter.Size(2085,330)
+Gui.Fiscal.ddlFilter.Position(150,570)
+Gui.Fiscal.ddlFilter.Parent("frTextSelection")
+Gui.Fiscal.lblFilterText.Create(Label,"Text",True,1935,255,0,150,1005,True,0,"Arial",8,-2147483633,0)
+Gui.Fiscal.lblFilterText.Parent("frTextSelection")
+Gui.Fiscal.lblFilterText.ForeColor(0)
+Gui.Fiscal.cmdSearch.Create(Button)
+Gui.Fiscal.cmdSearch.Size(855,375)
+Gui.Fiscal.cmdSearch.Position(135,2955)
+Gui.Fiscal.cmdSearch.Caption("Search")
+Gui.Fiscal.cmdSearch.Event(Click,cmdSearch_Click)
+Gui.Fiscal.cmdClear.Create(Button)
+Gui.Fiscal.cmdClear.Size(855,375)
+Gui.Fiscal.cmdClear.Position(1095,2955)
+Gui.Fiscal.cmdClear.Caption("Clear")
+Gui.Fiscal.cmdClear.Event(Click,cmdClear_Click)
+Gui.Fiscal.ddlSearchMode.Create(DropDownList)
+Gui.Fiscal.ddlSearchMode.Size(2670,330)
+Gui.Fiscal.ddlSearchMode.Position(135,450)
+Gui.Fiscal.ddlSearchMode.Event(Click,ddlSearchMode_Click)
+Gui.Fiscal.lblSearchMode.Create(Label,"Search Mode",True,1935,255,0,135,210,True,0,"Arial",8,-2147483633,0)
+Gui.Fiscal.lblSearchMode.ForeColor(0)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+v.Global.bChanged.Declare(boolean)
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+F.odbc.Connection!con.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+
+f.Data.DataTable.CreateFromSQL("Fiscal_DT","con","Select Invoice, User_1 as Fiscal_Num, Order_NO, Order_Suffix Suffix, Order_Type as Type, Date_Order, Customer, Name_Customer as Name, Address1, Address2, City, State, Zip, Country from V_Order_Hist_Head where ltrim(rtrim(User_1)) = ''",true)		
+Gui.Fiscal.gsFiscal.AddGridViewFromDataTable("Fiscal_GV","Fiscal_DT")				
+gui.Fiscal.gsFiscal.MainView("Fiscal_GV")
+f.Intrinsic.Control.CallSub(FormatGridColumns)
+
+'Add items to dropdownlist
+'Search Mode
+gui.Fiscal.ddlSearchMode.AddItem("All without a fiscal number")
+gui.Fiscal.ddlSearchMode.AddItem("All that has a fiscal number")
+gui.Fiscal.ddlSearchMode.AddItem("Date Range selection")
+gui.Fiscal.ddlSearchMode.AddItem("Text selection")
+gui.Fiscal.ddlSearchMode.AddItem("Date Range and Text combined")
+gui.Fiscal.ddlSearchMode.ListIndex(0)
+
+'Fiscal filter
+gui.Fiscal.ddlFiscalFilter.AddItem("Without a fiscal number")
+gui.Fiscal.ddlFiscalFilter.AddItem("Already has a fiscal number")
+gui.Fiscal.ddlFiscalFilter.AddItem("Both")
+gui.Fiscal.ddlFiscalFilter.ListIndex(0)
+
+'Text filter	
+gui.Fiscal.ddlFilter.addItem("Invoice")
+gui.Fiscal.ddlFilter.addItem("Fiscal")
+gui.Fiscal.ddlFilter.addItem("Order_NO")
+gui.Fiscal.ddlFilter.addItem("Order_Suffix")
+gui.Fiscal.ddlFilter.addItem("Order_Type")
+gui.Fiscal.ddlFilter.addItem("Customer")
+gui.Fiscal.ddlFilter.addItem("Name")
+gui.Fiscal.ddlFilter.addItem("Address1")
+gui.Fiscal.ddlFilter.addItem("Address2")
+gui.Fiscal.ddlFilter.addItem("City")
+gui.Fiscal.ddlFilter.addItem("State")
+gui.Fiscal.ddlFilter.addItem("Zip")
+gui.Fiscal.ddlFilter.addItem("Country")
+gui.Fiscal.ddlFilter.ListIndex(0)
+
+Gui.Fiscal..Show
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4328_Fiscal_Invoice_Update.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Fiscal_unload)
+Function.Intrinsic.Control.EndIf
+Program.Sub.Main.End
+
+Program.Sub.ddlSearchMode_Click.Start
+F.Intrinsic.Control.SetErrorHandler("ddlSearchMode_Click_Err")
+F.Intrinsic.Control.ClearErrors
+V.Local.sError.Declare(String)
+
+f.Intrinsic.Control.If(v.Screen.Fiscal!ddlSearchMode.Text,=,"All without a fiscal number")
+	gui.Fiscal.dtpBeg.Enabled(False)
+	gui.Fiscal.dtpEnd.Enabled(False)
+	gui.Fiscal.ddlFiscalFilter.Enabled(False)
+	gui.Fiscal.txtFilterText.Enabled(False)
+	gui.Fiscal.ddlFilter.Enabled(False)
+f.Intrinsic.Control.ElseIf(v.Screen.Fiscal!ddlSearchMode.Text,=,"All that has a fiscal number")
+	gui.Fiscal.dtpBeg.Enabled(False)
+	gui.Fiscal.dtpEnd.Enabled(False)
+	gui.Fiscal.ddlFiscalFilter.Enabled(False)
+	gui.Fiscal.txtFilterText.Enabled(False)
+	gui.Fiscal.ddlFilter.Enabled(False)	
+f.Intrinsic.Control.ElseIf(v.Screen.Fiscal!ddlSearchMode.Text,=,"Date Range selection")
+	gui.Fiscal.dtpBeg.Enabled(True)
+	gui.Fiscal.dtpEnd.Enabled(True)
+	gui.Fiscal.ddlFiscalFilter.Enabled(True)
+	gui.Fiscal.txtFilterText.Enabled(False)
+	gui.Fiscal.ddlFilter.Enabled(False)
+f.Intrinsic.Control.Elseif(v.Screen.Fiscal!ddlSearchMode.Text,=,"Text selection")
+	gui.Fiscal.dtpBeg.Enabled(False)
+	gui.Fiscal.dtpEnd.Enabled(False)
+	gui.Fiscal.ddlFiscalFilter.Enabled(False)
+	gui.Fiscal.txtFilterText.Enabled(True)
+	gui.Fiscal.ddlFilter.Enabled(True)
+f.Intrinsic.Control.Else
+	'Date Range and Text combined
+	gui.Fiscal.dtpBeg.Enabled(True)
+	gui.Fiscal.dtpEnd.Enabled(True)
+	gui.Fiscal.ddlFiscalFilter.Enabled(True)
+	gui.Fiscal.txtFilterText.Enabled(True)
+	gui.Fiscal.ddlFilter.Enabled(True)		
+f.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("ddlSearchMode_Click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4328_Fiscal_Invoice_Update.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+
+Function.Intrinsic.Control.EndIf
+
+Program.Sub.ddlSearchMode_Click.End
+
+Program.Sub.Fiscal_UnLoad.Start
+F.Intrinsic.Control.SetErrorHandler("Fiscal_unload_Err")
+F.Intrinsic.Control.ClearErrors
+V.Local.sError.Declare(String)
+v.Local.iSaveChanges.Declare(long)
+
+f.Intrinsic.Control.If(v.Global.bChanged)
+	Function.Intrinsic.UI.MsgBox("Some changes have been made. Do you want to save?", "Save changes", 3, variable.local.iSaveChanges)
+	
+	F.Intrinsic.Control.If(v.Local.iSaveChanges,=,2)
+		'Cancel, don't close
+		f.Intrinsic.Control.ExitSub			
+	F.Intrinsic.Control.elseif(v.Local.iSaveChanges,=,6)
+		'Yes, Save case
+		f.Intrinsic.Control.CallSub(cmdSave_click)
+	F.Intrinsic.Control.endif
+		'No (v.local.iSaveChanges = 7), go ahead and close
+f.Intrinsic.Control.EndIf
+
+F.ODBC.Connection!con.Close
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Fiscal_unload_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4328_Fiscal_Invoice_Update.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+
+Function.Intrinsic.Control.EndIf
+Program.Sub.Fiscal_UnLoad.End
+
+Program.Sub.cmdClear_Click.Start
+F.Intrinsic.Control.SetErrorHandler("cmdClear_Click_Err")
+F.Intrinsic.Control.ClearErrors
+
+v.Local.sError.Declare(string)
+
+gui.Fiscal.ddlFilter.ListIndex(0)
+gui.Fiscal.txtFilterText.Text("")
+gui.Fiscal.ddlFiscalFilter.ListIndex(0)
+gui.Fiscal.ddlSearchMode.ListIndex(0)
+
+gui.Fiscal.dtpBeg.Enabled(False)
+gui.Fiscal.dtpEnd.Enabled(False)
+gui.Fiscal.ddlFiscalFilter.Enabled(False)
+gui.Fiscal.txtFilterText.Enabled(False)
+gui.Fiscal.ddlFilter.Enabled(False)
+f.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdClear_Click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4328_Fiscal_Invoice_Update.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+
+Function.Intrinsic.Control.EndIf
+
+Program.Sub.cmdClear_Click.End
+
+Program.Sub.cmdSearch_Click.Start
+F.Intrinsic.Control.SetErrorHandler("Search_Err")
+F.Intrinsic.Control.ClearErrors
+v.Local..BulkDeclareString(sError, sBegDate,sEndDate, sFilterCriteria, sUpperFilterText)
+
+'Build SQL
+v.Local.sSQL.Declare(string,"Select Invoice, User_1 as Fiscal_Num, Order_NO, Order_Suffix Suffix, Order_Type as Type, Date_Order,Customer, Name_Customer as Name, Address1, Address2, City, State, Zip, Country from V_Order_Hist_Head")
+f.Intrinsic.Control.If(v.Screen.Fiscal!ddlSearchMode.Text,=,"All without a fiscal number")
+
+	F.Intrinsic.String.Build("{0} {1}",V.Local.sSql, " where ltrim(rtrim(User_1)) = '' ", V.Local.sSql) 
+	
+f.Intrinsic.Control.ElseIf(v.Screen.Fiscal!ddlSearchMode.Text,=,"All that has a fiscal number")
+
+	F.Intrinsic.String.Build("{0} {1}",V.Local.sSql, " where ltrim(rtrim(User_1)) != '' ", V.Local.sSql) 
+	
+f.Intrinsic.Control.ElseIf(v.Screen.Fiscal!ddlSearchMode.Text,=,"Date Range selection")
+
+	f.Intrinsic.Control.If(V.Screen.Fiscal!dtpBeg.Value,>,V.Screen.Fiscal!dtpEnd.Value)		
+		f.Intrinsic.UI.Msgbox("Beginning Date should not be after Ending Date","Select Date")
+		f.Intrinsic.Control.ExitSub
+	f.Intrinsic.Control.Endif
+	
+	F.Intrinsic.String.Format(V.Screen.Fiscal!dtpBeg.Value,"YYYY-MM-DD",V.local.sBegDate)
+	F.Intrinsic.String.Format(V.Screen.Fiscal!dtpEnd.Value,"YYYY-MM-DD",V.local.sEndDate)	
+	F.Intrinsic.String.Build("{0} {1} '{2}' and '{3}'",V.Local.sSql, " where Date_Order between ",v.Local.sBegDate,v.Local.sEndDate, V.Local.sSql)
+	
+	f.Intrinsic.Control.If(v.Screen.Fiscal!ddlFiscalFilter.Text,=,"Without a fiscal number")
+		F.Intrinsic.String.Build("{0} {1}",V.Local.sSql, " and ltrim(rtrim(User_1)) = '' ", V.Local.sSql)	
+	f.Intrinsic.Control.ElseIf(v.Screen.Fiscal!ddlFiscalFilter.Text,=,"Already has a fiscal number")
+		F.Intrinsic.String.Build("{0} {1}",V.Local.sSql, " and ltrim(rtrim(User_1)) != '' ", V.Local.sSql)	
+	f.Intrinsic.Control.EndIf
+
+f.Intrinsic.Control.ElseIf(v.Screen.Fiscal!ddlSearchMode.Text,=,"Text selection")
+
+	F.Intrinsic.Control.SelectCase(v.Screen.Fiscal!ddlFilter.Text)
+		F.Intrinsic.Control.Case("Fiscal")
+			v.Local.sFilterCriteria.Set("User_1")
+		F.Intrinsic.Control.Case("Name")
+			v.Local.sFilterCriteria.Set("Name_Customer")
+		F.Intrinsic.Control.CaseElse
+			v.Local.sFilterCriteria.Set(v.Screen.Fiscal!ddlFilter.Text)
+	F.Intrinsic.Control.EndSelect
+	f.Intrinsic.String.Trim(v.Screen.Fiscal!txtFilterText.Text,v.Local.sUpperFilterText)
+	f.Intrinsic.String.UCase(v.Local.sUpperFilterText,v.Local.sUpperFilterText)
+	F.Intrinsic.String.Build("{0} {1} ({2}) like '%{3}%'",V.Local.sSql, " where UCASE",v.Local.sFilterCriteria,v.Local.sUpperFilterText, V.Local.sSql)
+	
+f.Intrinsic.Control.Else
+	'Date Range and Text combined
+	
+	'Date process
+	f.Intrinsic.Control.If(V.Screen.Fiscal!dtpBeg.Value,>,V.Screen.Fiscal!dtpEnd.Value)		
+		f.Intrinsic.UI.Msgbox("Beginning Date should not be after Ending Date","Select Date")
+		f.Intrinsic.Control.ExitSub
+	f.Intrinsic.Control.Endif
+	
+	F.Intrinsic.String.Format(V.Screen.Fiscal!dtpBeg.Value,"YYYY-MM-DD",V.local.sBegDate)
+	F.Intrinsic.String.Format(V.Screen.Fiscal!dtpEnd.Value,"YYYY-MM-DD",V.local.sEndDate)	
+	F.Intrinsic.String.Build("{0} {1} '{2}' and '{3}'",V.Local.sSql, " where Date_Order between ",v.Local.sBegDate,v.Local.sEndDate, V.Local.sSql)
+	
+	f.Intrinsic.Control.If(v.Screen.Fiscal!ddlFiscalFilter.Text,=,"Without a fiscal number")
+		F.Intrinsic.String.Build("{0} {1}",V.Local.sSql, " and ltrim(rtrim(User_1)) = '' ", V.Local.sSql)	
+	f.Intrinsic.Control.ElseIf(v.Screen.Fiscal!ddlFiscalFilter.Text,=,"Already has a fiscal number")
+		F.Intrinsic.String.Build("{0} {1}",V.Local.sSql, " and ltrim(rtrim(User_1)) != '' ", V.Local.sSql)	
+	f.Intrinsic.Control.EndIf
+	
+	'Text process
+	F.Intrinsic.Control.SelectCase(v.Screen.Fiscal!ddlFilter.Text)
+		F.Intrinsic.Control.Case("Fiscal")
+			v.Local.sFilterCriteria.Set("User_1")
+		F.Intrinsic.Control.Case("Name")
+			v.Local.sFilterCriteria.Set("Name_Customer")
+		F.Intrinsic.Control.CaseElse
+			v.Local.sFilterCriteria.Set(v.Screen.Fiscal!ddlFilter.Text)
+	F.Intrinsic.Control.EndSelect
+	f.Intrinsic.String.Trim(v.Screen.Fiscal!txtFilterText.Text,v.Local.sUpperFilterText)
+	f.Intrinsic.String.UCase(v.Local.sUpperFilterText,v.Local.sUpperFilterText)	
+	F.Intrinsic.String.Build("{0} {1} ({2}) like '%{3}%'",V.Local.sSql, " and UCASE",v.Local.sFilterCriteria,v.Local.sUpperFilterText, V.Local.sSql)		
+f.Intrinsic.Control.Endif
+
+'Load search data
+f.Data.DataTable.Close("Fiscal_DT")
+f.Data.DataTable.CreateFromSQL("Fiscal_DT","con",v.Local.sSQL,true)		
+Gui.Fiscal.gsFiscal.AddGridViewFromDataTable("Fiscal_GV","Fiscal_DT")				
+gui.Fiscal.gsFiscal.MainView("Fiscal_GV")
+f.Intrinsic.Control.CallSub(FormatGridColumns)
+f.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Search_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4328_Fiscal_Invoice_Update.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+
+Function.Intrinsic.Control.EndIf
+
+Program.Sub.cmdSearch_Click.End
+
+Program.Sub.FormatGridColumns.Start
+F.Intrinsic.Control.SetErrorHandler("FormatGridColumns_Err")
+F.Intrinsic.Control.ClearErrors
+
+v.Local.sError.Declare(string)
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Invoice","MaxWidth","50")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Order_NO","MaxWidth","50")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Fiscal_Num","MaxWidth","100")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Suffix","MaxWidth","50")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Type","MaxWidth","40")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Date_Order","MaxWidth","70")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Customer","MaxWidth","60")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Name","MaxWidth","200")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Address1","MaxWidth","200")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Address2","MaxWidth","200")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","City","MaxWidth","100")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","State","MaxWidth","40")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Zip","MaxWidth","90")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Country","MaxWidth","90")
+
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Invoice","CellHAlignment","near")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Fiscal_Num","Readonly",False)
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Fiscal_Num","CellHAlignment","near")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Order_NO","CellHAlignment","near")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Suffix","CellHAlignment","near")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Type","CellHAlignment","near")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Date_Order","CellHAlignment","near")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Customer","CellHAlignment","near")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Name","CellHAlignment","near")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Address1","CellHAlignment","near")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Address2","CellHAlignment","near")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","City","CellHAlignment","near")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","State","CellHAlignment","near")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Zip","CellHAlignment","near")
+gui.Fiscal.gsFiscal.setColumnProperty("Fiscal_GV","Country","CellHAlignment","near")
+
+f.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("FormatGridColumns_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4328_Fiscal_Invoice_Update.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+
+Function.Intrinsic.Control.EndIf
+Program.Sub.FormatGridColumns.End
+
+Program.Sub.gsFiscal_CellValueChanged.Start
+F.Intrinsic.Control.SetErrorHandler("CellValueChanged_Err")
+F.Intrinsic.Control.ClearErrors
+v.Local..BulkDeclareString(sError, sInvoice,sOriginalFiscalNum,sNewFiscalNum,sSql)
+v.Local.iLength.Declare(long)
+
+Gui.Fiscal.gsFiscal.GetCellValue("Fiscal_GV",0,V.Args.RowIndex,v.Local.sInvoice)
+Gui.Fiscal.gsFiscal.GetCellValue("Fiscal_GV",1,V.Args.RowIndex,v.Local.sNewFiscalNum)
+f.Intrinsic.String.Trim(v.Local.sNewFiscalNum,v.Local.sNewFiscalNum)
+Function.Intrinsic.String.Len(v.Local.sNewFiscalNum, v.Local.iLength)
+
+f.Intrinsic.Control.If(v.Local.iLength,">",30)
+	f.Intrinsic.UI.Msgbox("Fiscal Number length must be less than 31")
+	'Put the original value back to the row
+	f.Intrinsic.String.Concat("Select User_1 from V_Order_hist_head where Invoice = '",v.Local.sInvoice,"'",v.Local.sSql)	
+	F.ODBC.Connection!con.ExecuteAndReturn(v.Local.sSql,v.Local.sOriginalFiscalNum)
+	Function.Data.DataTable.SetValue("Fiscal_DT", v.Args.RowIndex, "Fiscal_Num",v.Local.sOriginalFiscalNum)
+	f.Intrinsic.Control.ExitSub
+f.Intrinsic.Control.Else
+	Function.Data.DataTable.SetValue("Fiscal_DT", v.Args.RowIndex, "Fiscal_Num",v.Local.sNewFiscalNum)
+	v.Global.bChanged.Set(True)
+f.Intrinsic.Control.EndIf
+f.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("CellValueChanged_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4328_Fiscal_Invoice_Update.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+
+Function.Intrinsic.Control.EndIf
+
+Program.Sub.gsFiscal_CellValueChanged.End
+
+Program.Sub.cmdSave_Click.Start
+F.Intrinsic.Control.SetErrorHandler("Save_Err")
+F.Intrinsic.Control.ClearErrors
+
+v.Local..BulkDeclareString(sError, sMap)
+f.Intrinsic.UI.InvokeWaitDialog("Starting saving")
+v.Local.sMap.Set("Invoice@!@Invoice*!*Fiscal_Num@!@User_1")
+Function.Data.DataTable.SaveToDB("Fiscal_DT", "con", "Order_hist_head", "Invoice",2, v.Local.sMap)
+v.Global.bChanged.Set(False)
+f.Intrinsic.UI.CloseWaitDialog
+f.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Save_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4328_Fiscal_Invoice_Update.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+
+Function.Intrinsic.Control.EndIf
+
+Program.Sub.cmdSave_Click.End
+
+Program.Sub.Comments.Start
+${$0$}$$}$$}$1/23/2017 9:36:24 AM$}$False
+Program.Sub.Comments.End
